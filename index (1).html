@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Save to Google Sheets</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f6f9;
+      padding: 40px;
+      color: #333;
+    }
+
+    h1 {
+      color: #007BFF;
+    }
+
+    label {
+      font-weight: bold;
+      display: block;
+      margin-top: 15px;
+    }
+
+    input[type="text"],
+    input[type="number"] {
+      padding: 8px;
+      width: 300px;
+      font-size: 16px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+
+    button {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #007BFF;
+      color: white;
+      border: none;
+      font-size: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    pre {
+      background-color: #fff;
+      border: 1px solid #ddd;
+      padding: 15px;
+      max-width: 700px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      border-radius: 5px;
+      margin-top: 20px;
+    }
+
+    #dataDisplay {
+      font-family: monospace;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Save Score to Google Sheets</h1>
+  
+  <label>Name: <input type="text" id="nameInput"></label>
+  <label>Score: <input type="number" id="scoreInput"></label>
+  <button id="saveBtn">Save Data</button>
+  
+  <h2>All Data:</h2>
+  <pre id="dataDisplay">Loading...</pre>
+  
+  <script>
+    const scriptURL = "https://script.google.com/macros/s/AKfycbw9kCt6Gq38_Bjnb8WpHkuyZDVXx94yOTWCc0ELW887PeBgYgU_kZ0W4v2H_sTKTyORcQ/exec"; // Replace with your deployed script URL
+
+    document.getElementById("saveBtn").addEventListener("click", () => {
+      const name = document.getElementById("nameInput").value.trim();
+      const score = parseInt(document.getElementById("scoreInput").value);
+      
+      if (!name) {
+        alert("Please enter a name.");
+        return;
+      }
+      if (isNaN(score)) {
+        alert("Please enter a valid score.");
+        return;
+      }
+      
+      const payload = { name, score };
+      
+      fetch(scriptURL, {
+        method: "POST",
+        body: JSON.stringify(payload)
+      })
+      .then(res => res.text())
+      .then(msg => {
+        alert(msg);
+        if (msg === "Saved Successfully!") {
+          loadData();
+          document.getElementById("nameInput").value = "";
+          document.getElementById("scoreInput").value = "";
+        }
+      })
+      .catch(err => console.error("Error:", err));
+    });
+
+    function loadData() {
+      fetch(scriptURL)
+        .then(res => res.json())
+        .then(data => {
+          if (data.error) {
+            document.getElementById("dataDisplay").textContent = "Error: " + data.error;
+            return;
+          }
+          let output = "";
+          data.forEach(row => {
+            output += row.join(" | ") + "\n";
+          });
+          document.getElementById("dataDisplay").textContent = output;
+        })
+        .catch(err => {
+          document.getElementById("dataDisplay").textContent = "Failed to load data.";
+          console.error(err);
+        });
+    }
+
+    loadData();
+  </script>
+</body>
+</html>
